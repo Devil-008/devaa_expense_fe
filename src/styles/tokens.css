@@ -1,0 +1,15 @@
+:root {
+  --color-primary: #FF5A14;
+  --color-primary-hover: #F56B2F;
+  --color-secondary: #FF7A45;
+  --color-bg: #F7F8FC;
+  --color-surface: rgba(255, 255, 255, 0.72);
+  --color-border: rgba(255, 255, 255, 0.65);
+  --color-text-main: #202431;
+  --color-text-muted: #737887;
+  --color-success: #16A36A;
+  --color-danger: #E5484D;
+  --color-input-bg: rgba(255, 255, 255, 0.82);
+  
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
