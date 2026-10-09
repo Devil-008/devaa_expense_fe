@@ -1,75 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { transactionService } from '../services/transactionService';
+import axios from 'axios';
+import TransactionModal from '../components/TransactionModal';
 
-export default function TransactionsPage() {
+const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [filters, setFilters] = useState({ from_date: '', to_date: '', type: 'All', category: '' });
 
-  useEffect(() => {
-    loadTransactions();
-  }, []);
+  const fetchTransactions = async () => {
+    const res = await axios.get('/api/v1/transactions', { params: filters });
+    setTransactions(res.data);
+  };
 
-  const loadTransactions = async () => {
-    try {
-      const data = await transactionService.getTransactions();
-      setTransactions(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => { const timer = setTimeout(fetchTransactions, 500); return () => clearTimeout(timer); }, [filters]);
+
+  const handleSave = async (data) => {
+    await axios.post('/api/v1/transactions', data);
+    fetchTransactions();
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1>Transactions</h1>
-        <button className="btn-primary" style={{ width: 'auto' }}>Add Transaction</button>
+    <div className="p-4">
+      <div className="filter-bar">
+        <input type="date" onChange={(e) => setFilters({...filters, from_date: e.target.value})} />
+        <input type="date" onChange={(e) => setFilters({...filters, to_date: e.target.value})} />
+        <button className="btn-primary" onClick={() => setModalOpen(true)}>Add Transaction</button>
       </div>
-
-      <div className="glass-panel" style={{ padding: '1.5rem' }}>
-        {loading ? (
-          <p>Loading transactions...</p>
-        ) : transactions.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem 0', color: '#737887' }}>
-            <p>No transactions found.</p>
-            <p>Add your first transaction to start tracking!</p>
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(0,0,0,0.1)', textAlign: 'left' }}>
-                <th style={{ padding: '12px' }}>Date</th>
-                <th style={{ padding: '12px' }}>Type</th>
-                <th style={{ padding: '12px' }}>Amount</th>
-                <th style={{ padding: '12px' }}>Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map(tx => (
-                <tr key={tx.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                  <td style={{ padding: '12px' }}>{tx.transaction_date}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ 
-                      color: tx.type === 'income' ? '#16A36A' : '#E5484D',
-                      backgroundColor: tx.type === 'income' ? 'rgba(22, 163, 106, 0.1)' : 'rgba(229, 72, 77, 0.1)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.85rem'
-                    }}>
-                      {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px', fontWeight: 600 }}>
-                    {tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)}
-                  </td>
-                  <td style={{ padding: '12px', color: '#737887' }}>{tx.note || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <TransactionModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} categories={['Food', 'Rent']} />
+      <table>
+        {transactions.map(t => <tr key={t.id}><td>{t.amount}</td></tr>)}
+      </table>
     </div>
   );
-}
+};
+export default TransactionsPage;
